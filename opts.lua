@@ -88,7 +88,7 @@ function M.parse(arg)
     cmd:option('-L3', 'models/modelL3_4.t7', 'Trained Level 3 model')
     cmd:option('-L4', 'models/modelL4_4.t7', 'Trained Level 4 model')
 
-    cmd:option('-netType',     'pwc', 'Lua network file, unet or volcon (spynet) or pwc')
+    cmd:option('-netType',     'pwc', 'Lua network file, unet or spynet or pwc')
     cmd:option('-frames',          3,    'number of frames in symmetric window')  
     cmd:option('-two_frame',      0,    'use only two frame for predictions')  
     cmd:option('-no_occ',     false,  'turn off occlusion reasoning')

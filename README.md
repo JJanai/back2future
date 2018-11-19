@@ -24,15 +24,24 @@ luarocks make
 #### Set up back2future
 ```lua
 back2future = require('back2future')
-computeFlow = back2future.setup()
+computeFlow = back2future.init()
 ```
 #### Load images and compute flow
 ```lua
-im1 = image.load('samples/00001_img1.ppm' )
-im2 = image.load('samples/00001_img2.ppm' )
-flow = computeFlow(im1, im2)
+im1 = image.load('samples/frame_0009.png' )
+im2 = image.load('samples/frame_0010.png' )
+im3 = image.load('samples/frame_0011.png' )
+flow = computeFlow(im1, im2, im3)
 ```
-To save your flow fields to a .flo file use [flowExtensions.writeFLO](#writeFLO).
+#### Storing flow field and flow visualization
+```lua
+flowX = require('flowExtensions')
+flowX.writeFLO('samples/flow.flo',flow)
+
+floImg = flowX.xy2rgb(flow[{1,{},{}}], flow[{2,{},{}}])
+image.save('samples/flow.png', floImg)
+```
+More details in [flowExtensions](#flowUtils).
 
 <a name="training"></a>
 ## Training
@@ -95,4 +104,15 @@ Scales `flowBatch` of size `Bx2xMxN`, a batch of `B` flow fields by `sc` times. 
 Free for non-commercial and scientific research purposes. For commercial use, please contact ps-license@tue.mpg.de. Check LICENSE file for details.
 
 ## When using this code, please cite
-J. Janai, F. Gney, A. Ranjan, M. Black, and A. Geiger. "Unsupervised learning of multi-frame optical flow with occlusions." In Proc. of the European Conf. on Computer Vision (ECCV), 2018. 
+
+@inproceedings{Janai2018ECCV,<br>
+&nbsp;&nbsp;title = {Unsupervised Learning of Multi-Frame Optical Flow with Occlusions },<br>
+&nbsp;&nbsp;author = {Janai, Joel and G{\"u}ney, Fatma and Ranjan, Anurag and Black, Michael J. and Geiger, Andreas},<br>
+&nbsp;&nbsp;booktitle = {European Conference on Computer Vision (ECCV)},<br>
+&nbsp;&nbsp;volume = {Lecture Notes in Computer Science, vol 11220},<br>
+&nbsp;&nbsp;pages = {713--731},<br>
+&nbsp;&nbsp;publisher = {Springer, Cham},<br>
+&nbsp;&nbsp;month = sep,<br>
+&nbsp;&nbsp;year = {2018},<br>
+&nbsp;&nbsp;month_numeric = {9}<br>
+}

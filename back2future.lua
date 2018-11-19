@@ -25,9 +25,13 @@ require 'cudnn'
 require 'nngraph'
 require 'stn'
 require 'spy'
+require 'models.CostVolMulti'
 local flowX = require 'flowExtensions'
 
 local M = {}
+
+local loadSize = {9, 384, 1216}
+-- {9, 448, 1024}
 
 local eps = 1e-6
 local meanstd = {
@@ -43,39 +47,40 @@ local function normalize(imgs)
 end
 M.normalize = normalize
 
-local computeFlow = function(im1, im2)
-    local imgs = torch.cat(im1, im2, 1)
+local computeFlow = function(im1, im2, im3)
+    local imgs = torch.cat({im1, im2, im3}, 1)
     imgs = TF.ColorNormalize(meanstd)(imgs)
   
     local width = imgs:size(3)
     local height = imgs:size(2)
     
-    local fineWidth, fineHeight
+    local fineWidth = loadSize[3]
+    local fineHeight = loadSize[2]
     
-    if width%32 == 0 then
-      fineWidth = width
-    else
-      fineWidth = width + 32 - math.fmod(width, 32)
-    end
+    -- if width%32 == 0 then
+    --   fineWidth = width
+    -- else
+    --   fineWidth = width + 32 - math.fmod(width, 32)
+    -- end
   
-    if height%32 == 0 then
-      fineHeight = height
-    else
-      fineHeight = height + 32 - math.fmod(height, 32)
-    end  
+    -- if height%32 == 0 then
+    --   fineHeight = height
+    -- else
+    --   fineHeight = height + 32 - math.fmod(height, 32)
+    -- end  
          
     imgs = image.scale(imgs, fineWidth, fineHeight)
   
-    imgs = imgs:resize(1,6,fineHeight,fineWidth):cuda()
+    imgs = imgs:resize(1,9,fineHeight,fineWidth):cuda()
     local flow_est = model:forward(imgs)
   
     -- get flow from table
-    flow_est = flow_est:squeeze():float()
+    flow_est = flow_est[1]:squeeze():double()
 
     -- resize and scale flow
     local sc_h = height/flow_est:size(2)
     local sc_w = width/flow_est:size(3)
-    flow_est = image.scale(flow_est, w, h, 'simple')
+    flow_est = image.scale(flow_est, width, height, 'simple')
     flow_est[2] = flow_est[2]*sc_h
     flow_est[1] = flow_est[1]*sc_w
   
@@ -84,45 +89,38 @@ local computeFlow = function(im1, im2)
   end
 
 local function init(opt)
-    opt = opt or 'Ours-Hard-ft-KITTI'
-    
-    if opt=="Classic" then
-        modelPath = paths.concat('models', 'modelL1_F.t7')
-    end
-    
-    if opt=="Multi" then
-        modelPath = paths.concat('models', 'modelL1_F.t7')
-    end
-
-    if opt=="Ours-None" then
-        modelPath = paths.concat('models', 'modelL1_F.t7')
-    end
-  
-    if opt=="Ours-Soft" then
-        modelPath = paths.concat('models', 'modelL1_C.t7')
-    end
+    opt = opt or 'Ours-Soft-ft-KITTI'
   
     if opt=="Ours-Hard" then
-        modelPath = paths.concat('models', 'modelL1_4.t7')
+        modelPath = paths.concat('models', 'B2F_Hard.t7')
     end
   
     if opt=="Ours-Hard-ft-KITTI" then
-        modelPath = paths.concat('models', 'modelL1_3.t7')
+        modelPath = paths.concat('models', 'B2F_Hard_ft_KITTI.t7')
     end
   
     if opt=="Ours-Hard-ft-Sintel" then
-        modelPath = paths.concat('models', 'modelL1_K.t7')
+        modelPath = paths.concat('models', 'B2F_Hard_ft_Sintel.t7')
     end
-    
+  
+    if opt=="Ours-Soft-ft-KITTI" then
+        modelPath = paths.concat('models', 'B2F_Soft_ft_KITTI.t7')
+    end
+  
+    if opt=="Ours-Soft-ft-Sintel" then
+        modelPath = paths.concat('models', 'B2F_Soft_ft_Sintel.t7')
+    end
+
+    -- read in model
     model = torch.load(modelPath)
     if torch.type(model) == 'nn.DataParallelTable' then
         model = model:get(1)
     end
     model:evaluate()
   
-    return easyComputeFlow
+    return computeFlow
   end
-  M.easy_setup = easy_setup
+  M.init = init
   
   
   
