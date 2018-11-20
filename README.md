@@ -11,8 +11,21 @@ Overview:
 <a name="setUp"></a>
 ## Setup
 You need to have [Torch.](http://torch.ch/docs/getting-started.html#_)
+<br>
 
-Install other required packages
+The code was tested with Torch7, CUDA 9.0, cudnn 7.0. When using CUDA 9.0 you will run into [problems](https://github.com/torch/torch7/issues/1133) following the Torch installation guide. Execute the following command before calling install.sh to resolve the problem:
+```bash
+export TORCH_NVCC_FLAGS="-D__CUDA_NO_HALF_OPERATORS__"
+```
+
+For cudnn 7.0, you will also need to clone and install the Revision 7 branch of the cudnn.torch repository:
+```bash
+git clone https://github.com/soumith/cudnn.torch -b R7
+cd cudnn.torch
+luarocks make cudnn-scm-1.rockspec
+```
+
+Install other required packages:
 ```bash
 cd extras/spybhwd
 luarocks make
@@ -31,29 +44,44 @@ computeFlow = back2future.init()
 im1 = image.load('samples/frame_0009.png' )
 im2 = image.load('samples/frame_0010.png' )
 im3 = image.load('samples/frame_0011.png' )
-flow = computeFlow(im1, im2, im3)
+flow, fwd_occ, bwd_occ  = computeFlow(im1, im2, im3)
 ```
-#### Storing flow field and flow visualization
+#### Storing flow field, flow visualization and forward occlusions
 ```lua
 flowX = require('flowExtensions')
-flowX.writeFLO('samples/flow.flo',flow)
+flowX.writeFLO('samples/flow.flo', flow:float())
 
 floImg = flowX.xy2rgb(flow[{1,{},{}}], flow[{2,{},{}}])
 image.save('samples/flow.png', floImg)
+
+image.save('samples/fwd_occ.png', fwd_occ * 255)
+image.save('samples/bwd_occ.png', bwd_occ * 255)
 ```
 More details in [flowExtensions](#flowUtils).
 
 <a name="training"></a>
 ## Training
-Training sequentially is faster than training end-to-end since you need to learn small number of parameters at each level. To train a level `N`, we need the trained models at levels `1` to `N-1`. You also initialize the model with a pretrained model at `N-1`.
-
-E.g. To train level 3, we need trained models at `L1` and `L2`, and we initialize it  `modelL2_3.t7`.
+Pre-training using the hard constraint network on RoamingImages with linear motion:
 ```bash
-th main.lua -fineWidth 128 -fineHeight 96 -level 3 -netType volcon \
--cache checkpoint -data FLYING_CHAIRS_DIR \
--L1 models/modelL1_3.t7 -L2 models/modelL2_3.t7 \
--retrain models/modelL2_3.t7
+th main.lua -cache checkpoint -expName Hard_Constraint -dataset Toy_HD_Complete \
+-frames 3 -netType pwc -levels 7 \
+-optimize pme -pme 1 -pme_criterion OBCC -pme_penalty L1 \
+-smooth_occ 0.1 -prior_occ 0.1 -smooth_flow 2 \
+-batchSize 8 -nDonkeys 8 -nGPU 1
 ```
+
+Fine-tuning 'Hard_Constraint' model after 10 iterations using the soft constraint network on KITTI:
+```bash
+th main.lua -cache checkpoint -netType pwc -expName Soft_KITTI \
+-frames 3 -netType pwc -levels 7 \
+-optimize pme -pme 2 -pme_criterion OBGCC -pme_penalty L1 \
+-pme_alpha 0 -pme_beta 1 -pme_gamma 1 \
+-smooth_occ 0.1 -prior_occ 0.1 -smooth_flow 0.1 -smooth_second_order \
+-const_vel 0.0001 -backward_flow -convert_to_backward_flow \
+-retrain Hard_Constraint/model_10.t7 -optimState Hard_Constraint/optimState_10.t7 \
+-nDonkeys 8 -nGPU 1 -LR 0.00001
+```
+A complete list of options can be found in [opts.lua](opts.lua).
 
 <a name="flowUtils"></a>
 ## Optical Flow Utilities
@@ -76,7 +104,6 @@ Given `flow_x` and `flow_y` of size `MxN` each, return an image of size `3xMxN` 
 #### [flow] flowX.loadFLO(filename)
 Reads a `.flo` file. Loads `x` and `y` components of optical flow in a 2 channel `2xMxN` optical flow field. First channel stores `x` component and second channel stores `y` component.
 
-<a name="writeFLO"></a>
 #### flowX.writeFLO(filename,F)
 Write a `2xMxN` flow field `F` containing `x` and `y` components of its flow fields in its first and second channel respectively to `filename`, a `.flo` file.
 

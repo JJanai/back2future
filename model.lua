@@ -18,7 +18,6 @@ require 'optim'
 require 'criterions.L2Criterion'
 require 'criterions.MBCCriterion'
 require 'criterions.MSSIML1Criterion'
-require 'criterions.MCSADCriterion'
 require 'criterions.OBCCriterion'
 require 'criterions.OBGCCriterion'
 require 'criterions.OSSIML1Criterion'
@@ -223,17 +222,18 @@ if opt.smooth_second_order then
   fs_criterion = nn.SecondOrderSmoothnessCriterion()
 else
   fs_criterion = nn.SmoothnessCriterion()
-end
-if opt.smooth_flow_penalty == 'L1' then
-  fs_criterion.p = L1Penalty()
-elseif opt.smooth_flow_penalty == 'Lorentzian' then
-  fs_criterion.p = LorentzianPenalty()
+  if opt.smooth_flow_penalty == 'L1' then
+    fs_criterion.p = L1Penalty()
+  elseif opt.smooth_flow_penalty == 'Lorentzian' then
+    fs_criterion.p = LorentzianPenalty()
+  end
 end
 
 -- constant velocity loss
 cv_criterion = nn.ConstVelCriterion()
 
 -- occlusion smoothness
+os_criterion = nn.SmoothnessCriterion()
 if opt.smooth_occ_penalty == 'L1' then
   os_criterion.p = L1Penalty()
 elseif opt.smooth_occ_penalty == 'Lorentzian' then

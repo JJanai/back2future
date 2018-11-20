@@ -102,11 +102,10 @@ end
 local function tableToOutput(self, imgTable, outputTable, maskTable)
    local images, outputs, masks
    local quantity = #imgTable
-   assert(imgTable[1]:size()[1] == self.inputSize[1]*(1+2*opt.tmp_consistency))
+   assert(imgTable[1]:size()[1] == self.inputSize[1])
    assert(outputTable[1]:size()[1] == self.outputSize[1])
    
-   images = torch.Tensor(quantity,
-		       self.inputSize[1]*(1+2*opt.tmp_consistency), self.inputSize[2], self.inputSize[3])
+   images = torch.Tensor(quantity, self.inputSize[1], self.inputSize[2], self.inputSize[3])
    outputs = torch.Tensor(quantity,
            self.outputSize[1], self.outputSize[2], self.outputSize[3])
    masks = torch.Tensor(quantity,

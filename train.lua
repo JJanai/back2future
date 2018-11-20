@@ -59,8 +59,8 @@ local level_weights = {
 
 if opt.sizeAverage then
   level_weights = {
-  1, 1, 1, 1, 1, 1
-}
+    1, 1, 1, 1, 1, 1
+  }
 end
 
 local function paramsForEpoch(epoch)
@@ -309,7 +309,6 @@ function trainBatch(inputsCPU, labelsCPU, masksCPU)
         local sub_outs = {unpack(outputs, l * n_unit_out + 1, (l+1) * n_unit_out)}
 
         -- Flow Supervised Loss
-        for i = 1, 1 do
         local err_f = opt.epe * criterion:forward(sub_outs[1], {down_sampled_flow, down_sampled_mask})
         err = err + err_f * level_weights[l+1]
         gradOutputs[l * n_unit_out + 1]:add(criterion:backward(sub_outs[1], {down_sampled_flow, down_sampled_mask}):clone():mul(opt.epe * level_weights[l+1]))
