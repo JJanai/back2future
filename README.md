@@ -6,7 +6,8 @@ Overview:
 * [Usage](#usage) 
 * [Training](#training) 
 * [Optical Flow Utilities](#flowUtils) 
-* [References](#references)
+* [License](#license)
+* [Please cite us](#license)
 
 <a name="setUp"></a>
 ## Setup
@@ -130,10 +131,12 @@ Scales `flowBatch` of size `Bx2xMxN`, a batch of `B` flow fields by `sc` times. 
 ## References
 1. Our code is based on [anuragranj/spynet.](https://github.com/anuragranj/spynet)
 2. The warping code is based on [qassemoquab/stnbhwd.](https://github.com/qassemoquab/stnbhwd)
-3. The images in `samples` are from Flying Chairs dataset: 
-   A. Dosovitskiy, et al. "Flownet: Learning optical flow with convolutional networks." 2015 IEEE International Conference on Computer Vision (ICCV). IEEE, 2015.
+3. The images in `samples` are from KITTI 2015 dataset: <br>
+   A. Geiger, P. Lenz,  C.  Stiller, R. Urtasun: "Vision  meets  robotics:  The  KITTI  dataset." International Journal of Robotics Research (IJRR). (2013)<br>
+   M. Menze, A. Geiger: "Object scene flow for autonomous vehicles." In: Proc. IEEE Conf. on Computer Vision and Pattern Recognition (CVPR). (2015)<br>
 4. Some parts of `flowExtensions.lua` are adapted from [marcoscoffier/optical-flow](https://github.com/marcoscoffier/optical-flow/blob/master/init.lua) with help from [fguney](https://github.com/fguney).
    
+<a name="license"></a>
 ## License
 Free for non-commercial and scientific research purposes. For commercial use, please contact ps-license@tue.mpg.de. Check LICENSE file for details.
 
