@@ -69,8 +69,8 @@ if opt.retrain ~= 'none' then
   print('Loading model from file: ' .. opt.retrain)
 
 
-  if latest <= 0 and opt.convert_to_backward_flow then
-    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CONVERTING THE OLD MODEL TO THE NEW MODEL !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  if latest <= 0 and opt.convert_to_soft then
+    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CONVERTING THE HARD CONSTRAINT MODEL TO THE SOFT CONSTRAINT MODEL !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     -- CREATE A NEW MODEL
     paths.dofile('models/' .. opt.netType .. '.lua')
     print('=> Creating model from file: models/' .. opt.netType .. '.lua')
@@ -204,16 +204,14 @@ if pme_criterion then
   pme_criterion.F = opt.frames
   pme_criterion.backward_flow = opt.backward_flow
 
-  if opt.pme_penalty == 'L2' then
-    pme_criterion.p = QuadraticPenalty()
-  elseif opt.pme_penalty == 'L1' then
+  if opt.pme_penalty == 'L1' then
     pme_criterion.p = L1Penalty()
   elseif opt.pme_penalty == 'Lorentzian' then
     pme_criterion.p = LorentzianPenalty()
   end
 end
 
-if opt.dataset == 'Kitti2015_training' then
+if opt.dataset == 'Kitti2015' then
   pme_criterion.p = L1Penalty(0.38)
 end
 
@@ -222,11 +220,11 @@ if opt.smooth_second_order then
   fs_criterion = nn.SecondOrderSmoothnessCriterion()
 else
   fs_criterion = nn.SmoothnessCriterion()
-  if opt.smooth_flow_penalty == 'L1' then
-    fs_criterion.p = L1Penalty()
-  elseif opt.smooth_flow_penalty == 'Lorentzian' then
-    fs_criterion.p = LorentzianPenalty()
-  end
+end
+if opt.smooth_flow_penalty == 'L1' then
+  fs_criterion.p = L1Penalty()
+elseif opt.smooth_flow_penalty == 'Lorentzian' then
+  fs_criterion.p = LorentzianPenalty()
 end
 
 -- constant velocity loss

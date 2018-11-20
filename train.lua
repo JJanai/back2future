@@ -292,7 +292,7 @@ function trainBatch(inputsCPU, labelsCPU, masksCPU)
     end
 
     -- ################################### SUPERVISION ###################################
-    if opt.optimize == 'semi' or opt.optimize == 'epe' then
+    if opt.optimize == 'epe' then
       for l = 0, (levels-1) do
         if l > 0 then
           down_sampled_flow = down_nn:forward(down_sampled_flow):clone()
@@ -313,31 +313,29 @@ function trainBatch(inputsCPU, labelsCPU, masksCPU)
         err = err + err_f * level_weights[l+1]
         gradOutputs[l * n_unit_out + 1]:add(criterion:backward(sub_outs[1], {down_sampled_flow, down_sampled_mask}):clone():mul(opt.epe * level_weights[l+1]))
           
-        if not (opt.optimize == 'semi') then
-          if opt.frames > 2 then
-            if not opt.no_occ then
-              -- Occlusion Supervised Loss
-              local occ_repeated = down_sampled_occ
-              if opt.dis_occ == 1 then
-                occ_repeated = torch.repeatTensor(occ_repeated, 1, 2, 1, 1)
-                if outputs[out_warp_start-1]:size(2) == 3 then
-                  occ_repeated[{{},{1},{},{}}]:eq(0)
-                  occ_repeated[{{},{2},{},{}}]:eq(0.5)
-                  occ_repeated[{{},{3},{},{}}]:eq(1)
-                else
-                  local tmp1 = occ_repeated[{{},{1},{},{}}]
-                  local tmp2 = occ_repeated[{{},{2},{},{}}]
-                  occ_repeated[{{},{1},{},{}}] = torch.eq(tmp1,0):float() + 0.5*torch.eq(tmp1,0.5):float()
-                  occ_repeated[{{},{2},{},{}}] = torch.eq(tmp2,1):float() + 0.5*torch.eq(tmp2,0.5):float()
-                  occ_repeated = occ_repeated:cuda()
-                end
+        if opt.frames > 2 then
+          if not opt.no_occ then
+            -- Occlusion Supervised Loss
+            local occ_repeated = down_sampled_occ
+            if opt.dis_occ == 1 then
+              occ_repeated = torch.repeatTensor(occ_repeated, 1, 2, 1, 1)
+              if outputs[out_warp_start-1]:size(2) == 3 then
+                occ_repeated[{{},{1},{},{}}]:eq(0)
+                occ_repeated[{{},{2},{},{}}]:eq(0.5)
+                occ_repeated[{{},{3},{},{}}]:eq(1)
+              else
+                local tmp1 = occ_repeated[{{},{1},{},{}}]
+                local tmp2 = occ_repeated[{{},{2},{},{}}]
+                occ_repeated[{{},{1},{},{}}] = torch.eq(tmp1,0):float() + 0.5*torch.eq(tmp1,0.5):float()
+                occ_repeated[{{},{2},{},{}}] = torch.eq(tmp2,1):float() + 0.5*torch.eq(tmp2,0.5):float()
+                occ_repeated = occ_repeated:cuda()
               end
-    
-              local tmp = level_weights[l+1] * occ_criterion:forward(sub_outs[out_warp_start-1], occ_repeated)
-              err = err + tmp
-              occ = occ + tmp
-              gradOutputs[l * n_unit_out + out_warp_start-1]:add(occ_criterion:backward(sub_outs[out_warp_start-1], occ_repeated):clone():mul(level_weights[l+1]))
             end
+  
+            local tmp = level_weights[l+1] * occ_criterion:forward(sub_outs[out_warp_start-1], occ_repeated)
+            err = err + tmp
+            occ = occ + tmp
+            gradOutputs[l * n_unit_out + out_warp_start-1]:add(occ_criterion:backward(sub_outs[out_warp_start-1], occ_repeated):clone():mul(level_weights[l+1]))
           end
         end
       end
@@ -423,7 +421,7 @@ function trainBatch(inputsCPU, labelsCPU, masksCPU)
     end
 
     -- ################################### PHOTOMETRIC LOSS AND SMOOTHNESS ###################################
-    if(opt.optimize == 'semi' or opt.optimize == 'pme') then
+    if(opt.optimize == 'pme') then
       for l = 0, (levels-1) do
         if l > 0 then
           down_sampled = down:forward(down_sampled)
@@ -516,7 +514,7 @@ function trainBatch(inputsCPU, labelsCPU, masksCPU)
   avg_occ_acc_fwd = avg_occ_acc_fwd + occ_acc_fwd
 
   -- Calculate top-1 error, and print information
-  if opt.optimize == 'semi' or opt.optimize == 'pme' and opt.ground_truth == true then
+  if opt.optimize == 'pme' and opt.ground_truth == true then
     print(('Epoch: [%d][%d/%d]\tTime %.3f\tERR %.3f\tPME %.3f\tSmoothFlow %.3f\tSmoothOcc %.3f\tPriorOcc %.3f\t\tEPE %.3f\tEPE non Occ %.3f\tEPE Occ %.3f\tOcc Acc %.3f (%.3f,%.3f,%.3f)\tLR %.0e\tDataLoadingTime %.3f'):format(
         epoch, batchNumber, opt.epochSize, timer:time().real, err, pme, sflow, socc, gocc, epe, epe_nocc, epe_occ, oacc, occ_acc_bwd, occ_acc_vis, occ_acc_fwd,
         optimState.learningRate, dataLoadingTime))

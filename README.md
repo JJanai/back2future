@@ -61,9 +61,16 @@ More details in [flowExtensions](#flowUtils).
 
 <a name="training"></a>
 ## Training
+We provide the following files to read in images and gt flow from RoamingImages, KITTI and Sintel:<br>
+**NOTE**: Replace [PATH] in each file with the root path of the corresponding dataset.
+- [RoamingImages.dat](datasets/RoamingImages.dat): Our RoamingImages dataset
+- [Kitti2015.dat](datasets/Kitti2015.dat): KITTI 2015 Multiview Training set (excluding frames 9-12)
+- [Sintel.dat](datasets/Sintel.dat): Sintel Clean + Final Training
+
+
 Pre-training using the hard constraint network on RoamingImages with linear motion:
 ```bash
-th main.lua -cache checkpoint -expName Hard_Constraint -dataset Toy_HD_Complete \
+th main.lua -cache checkpoint -expName Hard_Constraint -dataset RoamingImages \
 -frames 3 -netType pwc -levels 7 \
 -optimize pme -pme 1 -pme_criterion OBCC -pme_penalty L1 \
 -smooth_occ 0.1 -prior_occ 0.1 -smooth_flow 2 \
@@ -72,12 +79,12 @@ th main.lua -cache checkpoint -expName Hard_Constraint -dataset Toy_HD_Complete 
 
 Fine-tuning 'Hard_Constraint' model after 10 iterations using the soft constraint network on KITTI:
 ```bash
-th main.lua -cache checkpoint -netType pwc -expName Soft_KITTI \
+th main.lua -cache checkpoint -netType pwc -expName Soft_KITTI -dataset Kitti2015 \
 -frames 3 -netType pwc -levels 7 \
 -optimize pme -pme 2 -pme_criterion OBGCC -pme_penalty L1 \
 -pme_alpha 0 -pme_beta 1 -pme_gamma 1 \
 -smooth_occ 0.1 -prior_occ 0.1 -smooth_flow 0.1 -smooth_second_order \
--const_vel 0.0001 -backward_flow -convert_to_backward_flow \
+-const_vel 0.0001 -backward_flow -convert_to_soft \
 -retrain Hard_Constraint/model_10.t7 -optimState Hard_Constraint/optimState_10.t7 \
 -nDonkeys 8 -nGPU 1 -LR 0.00001
 ```

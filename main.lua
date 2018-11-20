@@ -32,10 +32,6 @@ paths.dofile('test.lua')
 
 epoch = opt.epochNumber
 
-if opt.resubmit > 0 then
-  opt.nEpochs = opt.resubmit * opt.epochStore
-end
-
 for i=1,opt.nEpochs do
   train()
   test()
