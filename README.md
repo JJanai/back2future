@@ -83,18 +83,18 @@ th main.lua -cache checkpoints -expName Hard_Constraint -dataset RoamingImages -
 
 Fine-tuning 'Hard_Constraint' model after 10 iterations using the soft constraint network on KITTI:
 ```bash
-th main.lua -cache checkpoints -expName Soft_KITTI -dataset Kitti2015 \
+th main.lua -cache checkpoints -expName Soft_KITTI -dataset Kitti2015 -LR 0.00001 \
 -pme 2 -pme_criterion OBGCC -pme_alpha 0 -pme_beta 1 -pme_gamma 1 \
 -smooth_flow 0.1 -smooth_second_order -const_vel 0.0001 -past_flow -convert_to_soft \
--retrain checkpoints/Hard_Constraint/model_10.t7 -optimState checkpoints/Hard_Constraint/optimState_10.t7 -LR 0.00001
+-retrain checkpoints/Hard_Constraint/model_10.t7 -optimState checkpoints/Hard_Constraint/optimState_10.t7
 ```
 
 Fine-tuning 'Hard_Constraint' model after 10 iterations using the soft constraint network on Sintel:
 ```bash
-th main.lua -cache checkpoints -expName Soft_Sintel -dataset Sintel -ground_truth \
+th main.lua -cache checkpoints -expName Soft_Sintel -dataset Sintel -ground_truth -LR 0.00001 \
 -pme 4 -pme_criterion OBGCC -pme_alpha 1 -pme_beta 0 -pme_gamma 0 \
 -smooth_flow 0.1 -smooth_second_order -const_vel 0.0001 -past_flow -convert_to_soft \
--retrain checkpoints/Hard_Constraint/model_10.t7 -optimState checkpoints/Hard_Constraint/optimState_10.t7 -LR 0.00001
+-retrain checkpoints/Hard_Constraint/model_10.t7 -optimState checkpoints/Hard_Constraint/optimState_10.t7
 ```
 The complete list of parameters and the default values can be found in [opts.lua](opts.lua).
 
@@ -109,7 +109,8 @@ The complete list of parameters and the default values can be found in [opts.lua
    
 <a name="license"></a>
 ## License
-Free for non-commercial and scientific research purposes. For commercial use, please contact ps-license@tue.mpg.de. Check LICENSE file for details.
+Free for non-commercial and scientific research purposes. For commercial use, please contact ps-license@tue.mpg.de. <br>
+Check LICENSE file for details.
 
 ## When using this code, please cite
 
