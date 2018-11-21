@@ -85,7 +85,7 @@ function decoder(nChannels)
 end
 
 function createModelMulti(opt)
-  local win, frames, levels, dis_occ, nGPU = 5, 3, 4, 1, 1
+  local win, frames, levels, nGPU = 5, 3, 4, 1
   local featMaps = {3, d, d*2, d*4, d*6, d*8, d*12} 
   
   local two_frame = 0           -- standard pwc
@@ -104,7 +104,6 @@ function createModelMulti(opt)
     win = opt.pwc_ws
     frames = opt.frames
     levels = opt.levels
-    dis_occ = opt.dis_occ
     occ_input = opt.occ_input
     nGPU = opt.nGPU
     pwc_res = opt.residual

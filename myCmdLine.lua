@@ -1,3 +1,5 @@
+-- This code is an adaption from https://github.com/torch/torch7/blob/master/CmdLine.lua
+
 local myCmdLine = torch.class('torch.myCmdLine')
 
 local function strip(str)

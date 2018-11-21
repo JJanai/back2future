@@ -1,5 +1,7 @@
---[[ myLogger: a simple class to log symbols during training,
-        and automate plot generation
+--[[
+This code is an adaption from https://github.com/torch/optim/blob/master/Logger.lua
+
+myLogger: a simple class to log symbols during training, and automate plot generation
 
 Example:
     myLogger = optim.myLogger('somefile.log')    -- file to save stuff

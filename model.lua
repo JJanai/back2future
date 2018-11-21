@@ -52,7 +52,7 @@ if opt.retrain ~= 'none' then
   assert(paths.filep(opt.retrain), 'File not found: ' .. opt.retrain)
   print('Loading model from file: ' .. opt.retrain)
 
-
+  -- CONVERSION ONLY WORKS WITH 7 LAYERS AND 2 SKIP LAYERS 
   if latest <= 0 and opt.convert_to_soft then
     print("Converting hard constraint model to soft constraint model ...")
     -- CREATE A NEW MODEL
@@ -73,7 +73,7 @@ if opt.retrain ~= 'none' then
     -- if there is a model, there has to be an optimState
     assert(paths.filep(opt.optimState), 'File not found: ' .. opt.optimState)
 
-    -- CLONE
+    -- Clone unchanged components from hard constraint model to soft constraint model
     for m = 1, 90 do
       if pre_model.modules[m]:getParameters():nElement() > 0 then
         assert(torch.typename(model.modules[m]) == torch.typename(pre_model.modules[m]), 'Not same type!')
@@ -90,14 +90,13 @@ if opt.retrain ~= 'none' then
       end
     end
 
-    -- COPY WEIGHTS FROM FORWARD FLOW TO past flow
-    local src = {30,45,60,75,90, 94, 110, 128, 146, 164}
-    local dst = {93, 96, 99, 102, 105, 109, 126, 145, 164, 183}
+    -- Clone future flow decoder weights to past flow decoder weights and remaining components from hard constraint model to soft constraint model
+    local src = {30, 45, 60, 75, 90, 94, 110, 128, 146, 164}      -- indeces of future flow decoders and remaining components in old model
+    local dst = {93, 96, 99, 102, 105, 109, 126, 145, 164, 183}   -- indeces of past flow decoders and remaining components in new model
     for m = 1, #src do
       if pre_model.modules[src[m]]:getParameters():nElement() > 0 then
         assert(torch.typename(model.modules[dst[m]]) == torch.typename(pre_model.modules[src[m]]), 'Not same type!')
         assert(model.modules[dst[m]]:getParameters():nElement() == pre_model.modules[src[m]]:getParameters():nElement(), 'Not same number of parameters!')
-
 
         for mm = 1, #model.modules[dst[m]].modules do
           if model.modules[dst[m]].modules[mm].weight then

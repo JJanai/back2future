@@ -30,7 +30,7 @@ function M.parse(arg)
     cmd:option('-backend',      'cudnn',  'Options: cudnn | ccn2 | cunn')
 
     ------------- Data options ------------------------
-    cmd:option('-nDonkeys',        4,   'Number of donkeys to initialize (data loading threads)')
+    cmd:option('-nDonkeys',        8,   'Number of donkeys to initialize (data loading threads)')
     cmd:option('-scale',           1,   'Scale input before cropping')
     cmd:option('-fineWidth',       128, 'Width of the fine flow field, data is at res. 256 x 128')
     cmd:option('-fineHeight',      64,  'Height of the fine flow field')
@@ -45,7 +45,7 @@ function M.parse(arg)
     cmd:option('-nEpochs',          1000, 'Number of total epochs to run')
     cmd:option('-epochSize',        1000, 'Number of batches per epoch')
     cmd:option('-epochStore',       1,    'Store every X epoch')
-    cmd:option('-batchSize',        32,   'Mini-batch size (1 = pure stochastic)')
+    cmd:option('-batchSize',        8,   'Mini-batch size (1 = pure stochastic)')
     cmd:option('-epochNumber',      1,    'Manual epoch number (useful on restarts)')
     cmd:option('-retrain',          'none', 'Provide path to model to retrain with')
     cmd:option('-optimState',       'none', 'Provide path to an optimState to reload from')
@@ -68,8 +68,8 @@ function M.parse(arg)
     cmd:option('-smooth_second_order', false,   'Use second order smoothness')
     cmd:option('-smooth_flow_penalty', 'L1',   'Quadratic or L1 or Lorentzian')
     cmd:option('-smooth_occ_penalty', 'Quadratic', 'Quadratic, L1 or Lorentzian or Dirac or KL')
-    cmd:option('-smooth_occ', 1.0,    'Weight occlusion smoothness loss')
-    cmd:option('-prior_occ', 1.0,     'Weight occlusion prior loss')
+    cmd:option('-smooth_occ', 0.1,    'Weight occlusion smoothness loss')
+    cmd:option('-prior_occ', 0.1,     'Weight occlusion prior loss')
     cmd:option('-const_vel', 1.0,     'Weight for constant velocity loss (Soft Constraint)')
     
     ---------- Optimization options ----------------------
@@ -79,12 +79,12 @@ function M.parse(arg)
     cmd:option('-optimizer',      'adam', 'adam or sgd')
 
     ---------- Model options ----------------------------------
-    cmd:option('-netType',      'pwc',  'Lua network file, unet or spynet or pwc')
+    cmd:option('-netType',      'pwc',  'Lua network file pwc or spynet')
     cmd:option('-frames',       3,      'number of frames in symmetric window')  
     cmd:option('-two_frame',    0,      'use only two frame for predictions')  
     cmd:option('-no_occ',       false,  'turn off occlusion reasoning')
     
-    cmd:option('-levels',  6,           'Number of warping levels')
+    cmd:option('-levels',  7,           'Number of warping levels')
     cmd:option('-residual',  0,         '1: Use residual flow')
     cmd:option('-flow_input',  1,       '1: input upsampled flow to next outer level')
     cmd:option('-occ_input',  0,        '1: input upsampled occlusions to next outer level')
@@ -116,27 +116,7 @@ function M.parse(arg)
     assert(opt.frames == 2 or (opt.frames % 2) ~= 0)
     opt.channels = 3 * opt.frames
 
-    if opt.dataset == 'flying_chairs' then
-      opt.loadSize = {opt.channels, 384, 512}
-      opt.fineWidth = 512
-      opt.fineHeight = 384
-      
-      if opt.original_pwc == 1 then
-        opt.loadSize = {opt.channels, 384, 448}
-        opt.fineWidth = 448
-        opt.fineHeight = 384
-        opt.levels = 7
-        opt.pwc_skip = 2
-        opt.pwc_ws = 9
-        opt.pwc_full_res = 0
-        opt.residual = 0
-        opt.flownet_factor = 20
-        opt.rescale_flow = 0
-        opt.sizeAverage = false
-        opt.two_frame = 0
-        print('Setting PWC original parameters!!')
-      end
-    elseif string.match(opt.dataset, 'Kitti') then
+    if string.match(opt.dataset, 'Kitti') then
       opt.loadSize = {opt.channels, 375, 1242}
       opt.fineWidth = 1242  -- 1242
       opt.fineHeight = 375 -- 375
@@ -162,13 +142,15 @@ function M.parse(arg)
       opt.fineWidth = opt.fineWidth * opt.scale
       opt.fineHeight = opt.fineHeight * opt.scale
     end
-    
-    if string.match(opt.dataset, 'slowflow')  then
-      opt.rand_crop = 1
-    end
 
     if opt.optimize == 'epe' then
       opt.ground_truth = true
+    end
+
+    -- no past flow with spynet or unet
+    if opt.netType ~= 'pwc' then
+      opt.past_flow = false
+      opt.convert_to_soft = false
     end
 
     -- log parameters

@@ -54,7 +54,7 @@ end
 
 
 local level_weights = {
-  0.005, 0.01, 0.02, 0.08, 0.32, 0.64
+  0.005, 0.01, 0.02, 0.08, 0.32, 0.64, 1.28
 }
 
 if opt.sizeAverage then
@@ -317,20 +317,13 @@ function trainBatch(inputsCPU, labelsCPU, masksCPU)
           if not opt.no_occ then
             -- Occlusion Supervised Loss
             local occ_repeated = down_sampled_occ
-            if opt.dis_occ == 1 then
-              occ_repeated = torch.repeatTensor(occ_repeated, 1, 2, 1, 1)
-              if outputs[out_warp_start-1]:size(2) == 3 then
-                occ_repeated[{{},{1},{},{}}]:eq(0)
-                occ_repeated[{{},{2},{},{}}]:eq(0.5)
-                occ_repeated[{{},{3},{},{}}]:eq(1)
-              else
-                local tmp1 = occ_repeated[{{},{1},{},{}}]
-                local tmp2 = occ_repeated[{{},{2},{},{}}]
-                occ_repeated[{{},{1},{},{}}] = torch.eq(tmp1,0):float() + 0.5*torch.eq(tmp1,0.5):float()
-                occ_repeated[{{},{2},{},{}}] = torch.eq(tmp2,1):float() + 0.5*torch.eq(tmp2,0.5):float()
-                occ_repeated = occ_repeated:cuda()
-              end
-            end
+            
+            -- convert gt occlusions
+            local tmp1 = occ_repeated[{{},{1},{},{}}]
+            local tmp2 = occ_repeated[{{},{2},{},{}}]
+            occ_repeated[{{},{1},{},{}}] = torch.eq(tmp1,0):float() + 0.5*torch.eq(tmp1,0.5):float()
+            occ_repeated[{{},{2},{},{}}] = torch.eq(tmp2,1):float() + 0.5*torch.eq(tmp2,0.5):float()
+            occ_repeated = occ_repeated:cuda()
   
             local tmp = level_weights[l+1] * occ_criterion:forward(sub_outs[out_warp_start-1], occ_repeated)
             err = err + tmp
