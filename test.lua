@@ -121,7 +121,7 @@ function testBatch(inputsCPU, labelsCPU, masksCPU)
     n_unit_out = opt.frames + 1 -- flow + occ + warped
     n_flow = 1
       
-    if opt.backward_flow then
+    if opt.past_flow then
       n_flow = 2
       n_unit_out = n_unit_out + 1
       out_warp_start = 4
@@ -284,7 +284,7 @@ function testBatch(inputsCPU, labelsCPU, masksCPU)
       end
       fs_criterion:clear()
       
-      if opt.backward_flow then
+      if opt.past_flow then
         err = err + level_weights[l+1] * opt.const_vel * cv_criterion:forward(sub_outs)
       end
       

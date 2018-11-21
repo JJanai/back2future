@@ -30,22 +30,6 @@ require 'criterions.penalty.L1_function'
 require 'criterions.penalty.quadratic_function'
 require 'criterions.penalty.Lorentzian_function'
 
-local function deepCopy(tbl)
-  -- creates a copy of a network with new modules and the same tensors
-  local copy = {}
-  for k, v in pairs(tbl) do
-    if type(v) == 'table' then
-      copy[k] = deepCopy(v)
-    else
-      copy[k] = v
-    end
-  end
-  if torch.typename(tbl) then
-    torch.setmetatable(copy, torch.typename(tbl))
-  end
-  return copy
-end
-
 --[[
    1. Create Model
    2. Create Criterion
@@ -70,7 +54,7 @@ if opt.retrain ~= 'none' then
 
 
   if latest <= 0 and opt.convert_to_soft then
-    print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! CONVERTING THE HARD CONSTRAINT MODEL TO THE SOFT CONSTRAINT MODEL !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print("Converting hard constraint model to soft constraint model ...")
     -- CREATE A NEW MODEL
     paths.dofile('models/' .. opt.netType .. '.lua')
     print('=> Creating model from file: models/' .. opt.netType .. '.lua')
@@ -106,7 +90,7 @@ if opt.retrain ~= 'none' then
       end
     end
 
-    -- COPY WEIGHTS FROM FORWARD FLOW TO BACKWARD FLOW
+    -- COPY WEIGHTS FROM FORWARD FLOW TO past flow
     local src = {30,45,60,75,90, 94, 110, 128, 146, 164}
     local dst = {93, 96, 99, 102, 105, 109, 126, 145, 164, 183}
     for m = 1, #src do
@@ -142,7 +126,6 @@ if opt.retrain ~= 'none' then
     if opt.nGPU>0 then
       pre_model:cuda()
     end
-    --	end
 
     model = pre_model
   end
@@ -202,7 +185,7 @@ end
 
 if pme_criterion then
   pme_criterion.F = opt.frames
-  pme_criterion.backward_flow = opt.backward_flow
+  pme_criterion.past_flow = opt.past_flow
 
   if opt.pme_penalty == 'L1' then
     pme_criterion.p = L1Penalty()

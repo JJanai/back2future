@@ -22,7 +22,8 @@ function M.parse(arg)
     cmd:option('-expName',      'exp',    'Experiment name')
     cmd:option('-debug',        0,        'Turn on/off debug mode')
     cmd:option('-cache',        'checkpoints',            'Subdirectory in which to save/log experiments')
-    cmd:option('-dataset',      'flying_chairs_training', 'File name of dataset')
+    cmd:option('-dataset',      'RoamingImages', 'File name of dataset')
+    cmd:option('-ground_truth',  false,  'Dataset file contains ground truth path (e.g. Sintel)')
     cmd:option('-manualSeed',   2,        'Manually set RNG seed')
     cmd:option('-GPU',          1,        'Default preferred GPU')
     cmd:option('-nGPU',         1,        'Number of GPUs to use by default')
@@ -54,8 +55,7 @@ function M.parse(arg)
     ------------- Training/Criterion options --------------------
     cmd:option('-optimize',       'pme',  'epe (supervised) or pme (unsupervised)')
     cmd:option('-sizeAverage',    false,  'Normalize all losses by number of pixels')
-    cmd:option('-ground_truth',    true,  'Report error with ground truth during unsupervised training')
-    cmd:option('-backward_flow',  false,  'Jointly predict forward and backward flow (Soft Constraint)')
+    cmd:option('-past_flow',  false,  'Jointly predict future and past flow (Soft Constraint)')
     
     cmd:option('-epe', 0.0,           'Weight epe loss')
     cmd:option('-pme', 1.0,           'Weight reconstruction loss')
@@ -95,7 +95,7 @@ function M.parse(arg)
     cmd:option('-pwc_ws',      9,         'Window size for cost volumes')
     cmd:option('-pwc_skip',    2,         '0: full resolution image, >0: skip highest resolutions')
     cmd:option('-pwc_siamese',    1,      '0: use images directly, 1: extract features with siamese network (pwc)')
-    cmd:option('-pwc_sum_cvs',    false,  'Sum forward and backward cost volume')
+    cmd:option('-pwc_sum_cvs',    false,  'Sum future and past cost volume')
 
     cmd:text()
 
@@ -111,16 +111,12 @@ function M.parse(arg)
     if opt.no_occ == true then
       opt.pwc_sum_cvs = true
     end
-    
-    if opt.resubmit > 0 then
-      opt.cont = true
-    end
 
     opt.frames = tonumber(opt.frames)
     assert(opt.frames == 2 or (opt.frames % 2) ~= 0)
     opt.channels = 3 * opt.frames
 
-    if opt.dataset == 'flying_chairs_training' then
+    if opt.dataset == 'flying_chairs' then
       opt.loadSize = {opt.channels, 384, 512}
       opt.fineWidth = 512
       opt.fineHeight = 384
@@ -140,19 +136,6 @@ function M.parse(arg)
         opt.two_frame = 0
         print('Setting PWC original parameters!!')
       end
-    elseif opt.dataset == 'flying_things_finalpass_training' then
-      opt.loadSize = {opt.channels, 540, 960}
-      opt.fineWidth = 960
-      opt.fineHeight = 540
-      opt.cropWidth = 640
-      opt.cropHeight = 320
-      opt.scale = 0.7
-    elseif string.match(opt.dataset, 'Cityscapes') then
-      opt.loadSize = {opt.channels, 1024, 2048}
-      opt.fineWidth = 2048 
-      opt.fineHeight = 1024
-      opt.cropWidth = 640
-      opt.cropHeight = 320
     elseif string.match(opt.dataset, 'Kitti') then
       opt.loadSize = {opt.channels, 375, 1242}
       opt.fineWidth = 1242  -- 1242
@@ -165,27 +148,10 @@ function M.parse(arg)
       opt.fineHeight = 436 -- 375
       opt.cropWidth = 640    -- 640 CROPPED FOR FASTER TRAINING
       opt.cropHeight = 384
-    elseif opt.dataset == 'toy_NOISE_training' then
-      opt.loadSize = {opt.channels, 32, 64}
-      opt.fineWidth = 64
-      opt.fineHeight = 32
-    elseif opt.dataset == 'toy_training' then
-      opt.loadSize = {opt.channels, 32, 64}
-      opt.fineWidth = 64
-      opt.fineHeight = 32
-    elseif string.match(opt.dataset, 'slowflow') or string.match(opt.dataset, 'HD') then
+    else
       opt.loadSize = {opt.channels, 320, 640}
       opt.fineWidth = 640
       opt.fineHeight = 320
-      opt.batchSize = 8
-    elseif string.match(opt.dataset, 'DEBUG') then
-      opt.loadSize = {opt.channels, 640, 1280}
-      opt.scale = 0.5
-      opt.fineWidth = 640
-      opt.fineHeight = 320
-      opt.batchSize = 8
-    else
-      opt.loadSize = {opt.channels, 64, 128}
     end
     
     if opt.cropWidth > 0 and opt.cropHeight > 0 then

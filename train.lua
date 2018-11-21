@@ -34,7 +34,7 @@ local optimState = {
 }
 
 if opt.optimState ~= 'none' then
-  local retrain_opt = paths.concat(opt.cache, opt.optimState)
+  local retrain_opt = opt.optimState
   assert(paths.filep(retrain_opt), 'File not found: ' .. retrain_opt)
   print('Loading optimState from file: ' .. retrain_opt)
   optimState = torch.load(retrain_opt)
@@ -240,7 +240,7 @@ function trainBatch(inputsCPU, labelsCPU, masksCPU)
       n_unit_out = opt.frames + 1 -- flow + occ + warped
       n_flow = 1
       
-      if opt.backward_flow then
+      if opt.past_flow then
         n_flow = 2
         n_unit_out = n_unit_out + 1
         out_warp_start = 4
@@ -440,7 +440,7 @@ function trainBatch(inputsCPU, labelsCPU, masksCPU)
         fs_criterion:clear()
         
         -- constant velocity loss
-        if opt.backward_flow then
+        if opt.past_flow then
           sflow = sflow + level_weights[l+1] * opt.const_vel * cv_criterion:forward(sub_outs)
           local tmp = cv_criterion:backward(sub_outs)
           gradOutputs[l * n_unit_out + 1]:add(level_weights[l+1] * opt.const_vel * tmp[1])

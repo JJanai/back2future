@@ -33,7 +33,7 @@ function OBGCCriterion:__init()
   self.gamma = 1.0            -- weight for gradient in y dir difference
   self.F = 3                  -- number of frames
   self.pwc_flow_scaling = 1   -- flow scaling factor
-  self.backward_flow = false  -- true if backward flow is computed
+  self.past_flow = false  -- true if past flow is computed
 end
 
 function OBGCCriterion:updateOutput(input, target)
@@ -41,7 +41,7 @@ function OBGCCriterion:updateOutput(input, target)
 
   -- set start of first warped frame
   local warp_start = 3
-  if self.backward_flow then
+  if self.past_flow then
     warp_start = 4
   end
 
@@ -107,18 +107,18 @@ function OBGCCriterion:updateOutput(input, target)
     -- compute target locations and mask occlusions
     local tcoord
     if f <= ref then
-      if self.backward_tcoordw then
+      if self.past_flow then
         tcoord = self.coord + (f - ref - 1) * input[2] * self.pwc_flow_scaling
       else
         tcoord = self.coord + (f - ref - 1) * input[1] * self.pwc_flow_scaling
       end
 
-      local tocc = (occ[{{},{2},{},{}}])-- Visible or forward occluded
+      local tocc = (occ[{{},{2},{},{}}])-- Visible or future occluded
       tmp:cmul(tocc)
     else
       tcoord = self.coord + (f - ref) * input[1] * self.pwc_flow_scaling
 
-      local tocc = (occ[{{},{1},{},{}}]) -- Visible or backward occluded
+      local tocc = (occ[{{},{1},{},{}}]) -- Visible or past occluded
       tmp:cmul(tocc)
     end
 
@@ -158,7 +158,7 @@ function OBGCCriterion:updateGradInput(input, target)
 
   -- set start of first warped frame
   local warp_start = 3
-  if self.backward_flow then
+  if self.past_flow then
     warp_start = 4
   end
 
@@ -223,7 +223,7 @@ function OBGCCriterion:updateGradInput(input, target)
       if self.gradCheck == false then
         -- compute target pixel location
         local tcoord
-        if self.backward_flow then
+        if self.past_flow then
           tcoord = self.coord + (f - ref - 1) * input[2] * self.pwc_flow_scaling
         else
           tcoord = self.coord + (f - ref - 1) * input[1] * self.pwc_flow_scaling
@@ -236,7 +236,7 @@ function OBGCCriterion:updateGradInput(input, target)
         mask:cmul(torch.le(tcoord[{{},{2},{},{}}],h)) -- bottom
         mask = mask:cuda()
 
-        -- mask forward occlusions gradients and add occlusion penalty
+        -- mask future occlusions gradients and add occlusion penalty
         buffer:cmul(mask)
         local pen = (1 - mask) * self.penalty_out
         buffer:add(pen)
@@ -246,11 +246,11 @@ function OBGCCriterion:updateGradInput(input, target)
         gradInput[1 + f]:cmul(mask)
       end
 
-      -- forward occlusions gradients
+      -- future occlusions gradients
       gradInput[1][{{},{2},{},{}}]:add(buffer)
 
       -- mask occlusions
-      local tocc = (occ[{{},{2},{},{}}]):repeatTensor(1,input[warp_start]:size(2),1,1) -- Visible or forward occluded
+      local tocc = (occ[{{},{2},{},{}}]):repeatTensor(1,input[warp_start]:size(2),1,1) -- Visible or future occluded
       gradInput[1 + f]:cmul(tocc)
     else
       local mask
@@ -265,7 +265,7 @@ function OBGCCriterion:updateGradInput(input, target)
         mask:cmul(torch.le(tcoord[{{},{2},{},{}}],h)) -- bottom
         mask = mask:cuda()
 
-        -- mask forward occlusions gradients and add occlusion penalty
+        -- mask past occlusions gradients and add occlusion penalty
         buffer:cmul(mask)
         local pen = (1 - mask) * self.penalty_out
         buffer:add(pen)
@@ -275,11 +275,11 @@ function OBGCCriterion:updateGradInput(input, target)
         gradInput[1 + f]:cmul(mask)
       end
 
-      -- backward occlusions gradients
+      -- past occlusions gradients
       gradInput[1][{{},{1},{},{}}]:add(buffer)
 
       -- mask occlusions
-      local tocc = (occ[{{},{1},{},{}}]):repeatTensor(1,input[warp_start]:size(2),1,1)-- Visible or forward occluded
+      local tocc = (occ[{{},{1},{},{}}]):repeatTensor(1,input[warp_start]:size(2),1,1)-- Visible or past occluded
       gradInput[1 + f]:cmul(tocc)
     end
 

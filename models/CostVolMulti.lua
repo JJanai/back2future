@@ -29,7 +29,7 @@ function CostVolMulti:__init(win, fwd, verbose)
     self.win = 3
   end
   
-  -- mirror window in case of backward 
+  -- mirror window in case of past frames 
   if fwd ~= nil then
     self.fwd = fwd
   else

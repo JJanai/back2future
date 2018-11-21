@@ -203,7 +203,7 @@ local function getOCC(depth, flow, frames)
         occlusion[y][x] = 1
       end
         
-      -- backward
+      -- past
       xf = torch.round(x - flow[1][y][x])
       yf = torch.round(y - flow[2][y][x]) 
       if xf > 0 and xf <= w and yf > 0 and yf <= h then 

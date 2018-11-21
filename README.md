@@ -71,7 +71,7 @@ We provide the following files to read in images and gt flow from RoamingImages,
 
 Pre-training using the hard constraint network on RoamingImages with linear motion:
 ```bash
-th main.lua -cache checkpoint -expName Hard_Constraint -dataset RoamingImages \
+th main.lua -cache checkpoints -expName Hard_Constraint -dataset RoamingImages \
 -frames 3 -netType pwc -levels 7 \
 -optimize pme -pme 1 -pme_criterion OBCC -pme_penalty L1 \
 -smooth_occ 0.1 -prior_occ 0.1 -smooth_flow 2 \
@@ -80,14 +80,27 @@ th main.lua -cache checkpoint -expName Hard_Constraint -dataset RoamingImages \
 
 Fine-tuning 'Hard_Constraint' model after 10 iterations using the soft constraint network on KITTI:
 ```bash
-th main.lua -cache checkpoint -netType pwc -expName Soft_KITTI -dataset Kitti2015 \
+th main.lua -cache checkpoints -netType pwc -expName Soft_KITTI -dataset Kitti2015 \
 -frames 3 -netType pwc -levels 7 \
 -optimize pme -pme 2 -pme_criterion OBGCC -pme_penalty L1 \
 -pme_alpha 0 -pme_beta 1 -pme_gamma 1 \
 -smooth_occ 0.1 -prior_occ 0.1 -smooth_flow 0.1 -smooth_second_order \
--const_vel 0.0001 -backward_flow -convert_to_soft \
--retrain Hard_Constraint/model_10.t7 -optimState Hard_Constraint/optimState_10.t7 \
--nDonkeys 8 -nGPU 1 -LR 0.00001
+-const_vel 0.0001 -past_flow -convert_to_soft \
+-retrain checkpoints/Hard_Constraint/model_10.t7 -optimState checkpoints/Hard_Constraint/optimState_10.t7 \
+-batchSize 8 -nDonkeys 8 -nGPU 1 -LR 0.00001
+```
+
+Fine-tuning 'Hard_Constraint' model after 10 iterations using the soft constraint network on Sintel:
+```bash
+th main.lua -cache checkpoints -netType pwc -expName Soft_KITTI -dataset Sintel -ground_truth \
+-frames 3 -netType pwc -levels 7 \
+-optimize pme -pme 4 -pme_criterion OBGCC -pme_penalty L1 \
+-pme_alpha 1 -pme_beta 0 -pme_gamma 0 \
+-smooth_occ 0.1 -prior_occ 0.1 -smooth_flow 0.1 -smooth_second_order \
+-const_vel 0.0001 -past_flow -convert_to_soft \
+-retrain checkpoints/Hard_Constraint/model_10.t7 -optimState checkpoints/Hard_Constraint/optimState_10.t7 \
+-batchSize 8 -nDonkeys 8 -nGPU 1 -LR 0.00001
+
 ```
 A complete list of options can be found in [opts.lua](opts.lua).
 

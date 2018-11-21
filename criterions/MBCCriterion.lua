@@ -29,7 +29,7 @@ function MBCCriterion:__init()
   self.F = 3                  -- number of frames
   self.gradCheck = false      -- check gradients
   self.pwc_flow_scaling = 1   -- flow scaling factor
-  self.backward_flow = false  -- true if backward flow is computed
+  self.past_flow = false  -- true if past flow is computed
 end
 
 function MBCCriterion:updateOutput(input, target)
@@ -40,7 +40,7 @@ function MBCCriterion:updateOutput(input, target)
   if self.F == 2 then
     warp_start = 2
   end
-  if self.backward_flow then
+  if self.past_flow then
     warp_start = warp_start + 1
   end
 
@@ -71,7 +71,7 @@ function MBCCriterion:updateOutput(input, target)
       if self.F == 2 then
         tcoord = self.coord + input[1] * self.pwc_flow_scaling
       elseif f <= ref then
-        if self.backward_flow then
+        if self.past_flow then
           tcoord = self.coord + (f - ref - 1) * input[2] * self.pwc_flow_scaling
         else
           tcoord = self.coord + (f - ref - 1) * input[1] * self.pwc_flow_scaling
@@ -120,8 +120,8 @@ function MBCCriterion:updateGradInput(input, target)
   -- set gradient start (only warped images)
   local w_g_start = warp_start - 2
   
-  -- backward flow
-  if self.backward_flow then
+  -- past flow
+  if self.past_flow then
     warp_start = warp_start + 1
   end
 
@@ -154,7 +154,7 @@ function MBCCriterion:updateGradInput(input, target)
       if self.F == 2 then
         tcoord = self.coord + input[1] * self.pwc_flow_scaling
       elseif f <= ref then
-        if self.backward_flow then
+        if self.past_flow then
           tcoord = self.coord + (f - ref - 1) * input[2] * self.pwc_flow_scaling
         else
           tcoord = self.coord + (f - ref - 1) * input[1] * self.pwc_flow_scaling

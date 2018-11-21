@@ -89,12 +89,12 @@ function createModelMulti(opt)
   local featMaps = {3, d, d*2, d*4, d*6, d*8, d*12} 
   
   local two_frame = 0           -- standard pwc
-  local pwc_sum_cvs = true      -- sum future and past cost volumes
+  local pwc_sum_cvs = false     -- sum future and past cost volumes
   local skip = 2                -- skip levels
-  local flownet_factor = 1      -- flow scaling factor
-  local rescale_flow = 1        -- rescale flow while downsampling
+  local flownet_factor = 20     -- flow scaling factor
+  local rescale_flow = 0        -- rescale flow while downsampling
   
-  local pwc_res = 1             -- residual 
+  local pwc_res = 0             -- residual 
   local occ_input = 0           -- input previous occlusion  
   local siamese = 1             -- use siamese network (1) or image (0)
   
@@ -114,7 +114,7 @@ function createModelMulti(opt)
     flownet_factor = opt.flownet_factor
     rescale_flow = opt.rescale_flow
     pwc_sum_cvs = opt.pwc_sum_cvs
-    past_flow = opt.backward_flow
+    past_flow = opt.past_flow
   end
   
 
@@ -436,7 +436,7 @@ function createModelMulti(opt)
             end
           end
           
-          -- NOTE: backward is left negative to copy weights of pretrained model with only forward flow
+          -- NOTE: past is left negative to copy weights of pretrained model with only future flow
           local skip_ufm
           if rescale_flow == 1 then
             skip_ufm = tmp_ufm - nn.MulConstant(flownet_factor * (f - ref))
@@ -492,7 +492,7 @@ function createModelMulti(opt)
   -- create model
   local model = nn.gModule({inputData}, outputTable)
   model.flow_scale = flow_scale
-  model.backward_flow = past_flow
+  model.past_flow = past_flow
   
   -- visualize model
 --  graph.dot(model.fg, 'multi model fwd', 'pcw multi fwd')
