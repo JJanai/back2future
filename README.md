@@ -1,7 +1,7 @@
 # Back2Future: Unsupervised Learning of Multi-Frame Optical Flow with Occlusions
 The code for [Unsupervised Learning of Multi-Frame Optical Flow with Occlusions](http://www.cvlibs.net/publications/Janai2018ECCV.pdf). 
 
-Learning to solve optical flow in an end-to-end fashion from examples is attractive as deep neural networks allow for learning more complex hierarchical flow representations directly from annotated data. However, training such models requires large datasets and obtaining ground truth for real images is challenging as labeling dense correspondences by hand is intractable. We propose a framework for **unsupervised learning of optical flow and occlusions over multiple frames**. Our multi-frame, occlusion-sensitive formulation outperforms existing unsupervised two-frame methods and even produces results on par with some fully supervised methods.
+We propose a framework for **unsupervised learning of optical flow and occlusions over multiple frames**. Our multi-frame, occlusion-sensitive formulation outperforms existing unsupervised two-frame methods and even produces results on par with some fully supervised methods.
 
 More details can be found on our [Project Page](https://avg.is.tuebingen.mpg.de/research_projects/back2future).
 
@@ -44,8 +44,13 @@ luarocks make
 #### Set up back2future
 ```lua
 back2future = require('back2future')
-computeFlow = back2future.init()
+computeFlow = back2future.init('Ours-Soft-ft-KITTI')
 ```
+We provide three pre-trained models from our paper. Download and store the models into the [models](models) folder: 
+- [Ours-Hard](https://www.dropbox.com/s/6h7xrj2zn986o9l/RoamingImages_H.t7?dl=0)
+- [Ours-Soft-ft-KITTI](https://www.dropbox.com/s/q441yclt066jf0i/RoamingImages_H_KITTI_S.t7?dl=0)
+- [Ours-Soft-ft-Sintel](https://www.dropbox.com/s/x90pv7d2v6wu7gb/RoamingImages_H_Sintel_S.t7?dl=0)
+
 #### Load images and compute flow
 ```lua
 im1 = image.load('samples/frame_0009.png' )
@@ -70,9 +75,9 @@ More details in [flowExtensions](flowExtensions.lua).
 ## Training
 We provide the following files to read in images and gt flow from RoamingImages, KITTI and Sintel:<br>
 **NOTE**: Replace [PATH] in each file with the root path of the corresponding dataset.
-- [RoamingImages.dat](datasets/RoamingImages.dat): Our RoamingImages dataset
-- [Kitti2015.dat](datasets/Kitti2015.dat): KITTI 2015 Multiview Training set (excluding frames 9-12)
-- [Sintel.dat](datasets/Sintel.dat): Sintel Clean + Final Training
+- datasets/RoamingImages.dat: Our [RoamingImages dataset](https://www.dropbox.com/s/tfz3zc64an0mizh/RoamingImages.tar?dl=0)
+- datasets/Kitti2015.dat: [KITTI 2015 Multiview Training](http://www.cvlibs.net/download.php?file=data_scene_flow_multiview.zip) set (excluding frames 9-12)
+- datasets/Sintel.dat: [Sintel Clean + Final Training](http://sintel.is.tue.mpg.de/)
 
 
 Pre-training using the hard constraint network on RoamingImages with linear motion:
@@ -97,6 +102,12 @@ th main.lua -cache checkpoints -expName Soft_Sintel -dataset Sintel -ground_trut
 -retrain checkpoints/Hard_Constraint/model_10.t7 -optimState checkpoints/Hard_Constraint/optimState_10.t7
 ```
 The complete list of parameters and the default values can be found in [opts.lua](opts.lua).
+
+We also provide our pre-trained model on RoamingImages 'Ours-Hard' and the corresponding state of the optimizer for individual fine-tuning:
+[[model](https://www.dropbox.com/s/6h7xrj2zn986o9l/RoamingImages_H.t7?dl=0)], [[state](https://www.dropbox.com/s/91shuecs2aevbij/RoamingImages_H_optimState.t7?dl=0)]
+```bash
+-retrain [PATH]/RoamingImages_H.t7 -optimState [PATH]/RoamingImages_H_optimState.t7
+```
 
 <a name="references"></a>
 ## References

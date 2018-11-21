@@ -101,14 +101,6 @@ local function init(opt)
         modelPath = paths.concat('models', 'RoamingImages_H.t7')
     end
   
-    if opt=="Ours-Hard-ft-KITTI" then
-        modelPath = paths.concat('models', 'RoamingImages_H_KITTI_H.t7')
-    end
-  
-    if opt=="Ours-Hard-ft-Sintel" then
-        modelPath = paths.concat('models', 'RoamingImages_H_Sintel_H.t7')
-    end
-  
     if opt=="Ours-Soft-ft-KITTI" then
         modelPath = paths.concat('models', 'RoamingImages_H_KITTI_S.t7')
     end
