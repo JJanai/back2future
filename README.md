@@ -1,7 +1,7 @@
 # Back2Future: Unsupervised Learning of Multi-Frame Optical Flow with Occlusions
-We provide the code for the paper [Unsupervised Learning of Multi-Frame Optical Flow with Occlusions](http://www.cvlibs.net/publications/Janai2018ECCV.pdf). 
+The code for [Unsupervised Learning of Multi-Frame Optical Flow with Occlusions](http://www.cvlibs.net/publications/Janai2018ECCV.pdf). 
 
-Learning to solve optical flow in an end-to-end fashion from examples is attractive as deep neural networks allow for learning more complex hierarchical flow representations directly from annotated data. However, training such models requires large datasets and obtaining ground truth for real images is challenging as labeling dense correspondences by hand is intractable. We propose a framework for **unsupervised learning of optical flow and occlusions over multiple frames**. More specifically, we exploit the minimal configuration of three frames to strengthen the photometric loss and explicitly reason about occlusions. We demonstrate that our multi-frame, occlusion-sensitive formulation outperforms existing unsupervised two-frame methods and even produces results on par with some fully supervised methods.
+Learning to solve optical flow in an end-to-end fashion from examples is attractive as deep neural networks allow for learning more complex hierarchical flow representations directly from annotated data. However, training such models requires large datasets and obtaining ground truth for real images is challenging as labeling dense correspondences by hand is intractable. We propose a framework for **unsupervised learning of optical flow and occlusions over multiple frames**. Our multi-frame, occlusion-sensitive formulation outperforms existing unsupervised two-frame methods and even produces results on par with some fully supervised methods.
 
 More details can be found on our [Project Page](https://avg.is.tuebingen.mpg.de/research_projects/back2future).
 
